@@ -47,3 +47,15 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+#data
+df.csv
+ExerciseTrainingData.csv
+InjuryQuestions.txt
+Jumps.csv
+PlayerTrainingData.csv
+PlayerTrainingData.xlsx
+StrengthTraining.csv
+Wellness.csv
+
+```
