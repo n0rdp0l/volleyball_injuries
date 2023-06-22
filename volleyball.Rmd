@@ -213,3 +213,13 @@ num_injury_train
 num_injury_test
 ```
 
+```{r}
+
+# Create the plot
+ggplot(df_final, aes(x = Date, y = Injury)) +
+  geom_point() +
+  labs(x = "Date", y = "Injury Score", title = "Injury Score Across Dates") +
+  theme_minimal()
+
+```
+
