@@ -50,6 +50,7 @@ rsconnect/
 
 #data
 df.csv
+no_lags.csv
 ExerciseTrainingData.csv
 InjuryQuestions.txt
 Jumps.csv
