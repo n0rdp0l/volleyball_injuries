@@ -104,7 +104,6 @@ df_no.lags <- df
 
 
 
-# Convert Date to Date type if it's not already
 df$Date <- as.Date(df$Date)
 
 # a list of column names to create lagged versions of
