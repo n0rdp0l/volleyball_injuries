@@ -1,13 +1,3 @@
----
-title: "Volleyball"
-author: "s3337731 - Felix Wente"
-date: "2023-06-19"
-output: html_document
----
-
-# Load necessary libraries
-
-```{r}
 library(readr)
 library(dplyr)
 library(ggplot2)
@@ -24,42 +14,26 @@ library(ranger)
 library(car)
 library(broom)
 library(xtable)
-```
 
-
-
-# Read in the data
-```{r message=FALSE, warning=FALSE}
 ExerciseTrainingData <- read_csv2('ExerciseTrainingData.csv', col_types = cols())
 Jumps <- read_csv2('Jumps.csv', col_types = cols())
 Wellness <- read_csv2('Wellness.csv', col_types = cols())
 PlayerTrainingData <- read_csv('PlayerTrainingData.csv', col_types = cols())
 StrengthTraining <- read_csv2('StrengthTraining.csv', col_types = cols())
-```
 
-# Data cleaning
-
-```{r}
 # Convert date columns to date type for all data frames
 ExerciseTrainingData$Date <- as.Date(ExerciseTrainingData$Date, format = "%d-%m-%Y")
 Jumps$Date <- as.Date(Jumps$Date, format = "%d-%m-%Y")
 StrengthTraining$Date <- as.Date(StrengthTraining$Date, format = "%d-%m-%Y")
 Wellness$Date <- as.Date(Wellness$Date, format = "%d-%m-%Y")
-```
 
-
-## Merge into one dataframe 
-```{r}
 # merge the data frames by the "date" columns
 df <- Reduce(function(x, y) merge(x, y, by = c("Date", "PlayerID"), all = TRUE),
                     list(ExerciseTrainingData, Jumps, StrengthTraining, Wellness))
 df <- merge(df, PlayerTrainingData, by =  c("TrainingID", "PlayerID"))
 
 df <- df[, -which(names(df) == "DateTime")]
-```
 
-
-```{r}
 ## adress duration variables 
 df$Duration.player <- as.character(df$Duration.y)
 df$Duration.exercise <- as.character(df$Duration.x)
@@ -109,17 +83,11 @@ df$Duration.exercise <- as.numeric(df$Duration.exercise, units="secs")
 
 df <- df[, -which(names(df) == "DateEndTime")]
 df <- df[, -which(names(df) == "DateStartTime")]
-```
 
-```{r}
 summary(df)
 unique(sort(df$Date))
 
-```
 
-
-## create missing date rows to complete time series 
-```{r}
 
 # Create a list of data frames, each containing a sequence of all dates within the date range for each player
 date_sequences <- lapply(unique(df$PlayerID), function(id) {
@@ -136,11 +104,7 @@ df <- full_join(all_dates, df, by = c("Date", "PlayerID"))
 
 df_no.lags <- df
 
-```
 
-
-## missing values 
-```{r}
 # Total number of missing values in the data frame
 total_na <- sum(is.na(df))
 
@@ -152,9 +116,7 @@ print(col_na)
 
 # Visualize missing values
 gg_miss_var(df)
-```
-# Feature engeenering 
-```{r}
+
 
 # Convert Date to Date type if it's not already
 df$Date <- as.Date(df$Date)
@@ -198,9 +160,7 @@ for (var in numeric_vars) {
 df_final <- df %>%
   dplyr::select(-setdiff(numeric_vars, "Injury"))
 rm(df)
-```
 
-```{r}
 # Total number of missing values in the data frame
 total_na <- sort(sum(is.na(df_final)))
 
@@ -212,17 +172,11 @@ print(col_na)
 
 # Visualize missing values
 gg_miss_var(df_final)
-```
 
-```{r eval=FALSE, include=FALSE}
-dim(df_final)
-df_final <- na.omit(df_final)
-dim(df_final)
-```
+## dim(df_final)
+## df_final <- na.omit(df_final)
+## dim(df_final)
 
-
-## train test split
-```{r}
 # Sort the data by date
 df_final$Date <- as.Date(df_final$Date, format = "%Y-%m-%d")
 
@@ -231,9 +185,7 @@ df_final <- df_final %>% arrange(Date)
 df_final$Injury <- as.factor(df_final$Injury)
 
 
-```
 
-```{r}
 # Identify the numeric variables (excluding the outcome variable and date)
 numeric_vars <- setdiff(names(df_final)[sapply(df_final, is.numeric)], c("PlayerID", "Date"))
 
@@ -242,19 +194,14 @@ preproc <- preProcess(df_final[, numeric_vars], method = "scale")
 
 # Scale the numeric variables in the training and testing sets
 df_final[, numeric_vars] <- predict(preproc, newdata = df_final[, numeric_vars])
-```
 
-
-```{r}
 # Determine the date that splits the data into roughly an 80/20 split
 split_date <- df_final$Date[round(0.8 * nrow(df_final))]
 
 # Create train and test sets
 train <- df_final %>% filter(Date <= split_date)
 test <- df_final %>% filter(Date > split_date)
-```
 
-```{r}
 dim(df_no.lags)
 df_no.lags <- na.omit(df_no.lags)
 dim(df_no.lags)
@@ -264,9 +211,7 @@ df_no.lags <- df_no.lags %>% arrange(Date)
 #df_no.lags$Injury <- as.factor(df_no.lags$Injury)
 df_no.lags <- df_no.lags[, -which(names(df_no.lags) == "Focus")]
 
-```
 
-```{r}
 # Determine the date that splits the data into roughly an 80/20 split
 split_date <- df_no.lags$Date[round(0.7 * nrow(df_no.lags))]
 
@@ -276,9 +221,7 @@ test <- df_no.lags %>% filter(Date > split_date)
 
 train$Date <- as.factor(train$Date)
 test$Date <- as.factor(test$Date)
-```
 
-```{r}
 
 # Prepare data for lasso model
 x_train <- model.matrix(Injury ~ .-1, data = train) 
@@ -296,9 +239,7 @@ lasso_model <- glmnet(x_train, y_train, alpha = 1, lambda = lambda_optimal)
 # Print lasso model
 lasso_model
 
-```
 
-```{r}
 # Get coefficients from the lasso model
 coefficients <- coef(lasso_model)
 
@@ -314,10 +255,7 @@ final_variables <- coef_df[coef_df$Coefficient != 0, ]$Variable
 # Print the final variables
 print(final_variables)
 
-```
 
-
-```{r}
 rm(df_final)
 rm(df_no.lags)
 
@@ -332,42 +270,9 @@ train_set_rf <- data.frame(Injury = train$Injury, predictors_rf)
 # Fit random forest model
 rf_model <- ranger(Injury ~ ., data = train_set_rf, importance = 'impurity')
 
-# Get feature importance
-rf_model$variable.importance
 
 
 
-
-```
-
-```{r}
-# Get variable importance
-importance <- rf_model$variable.importance
-
-# Create data frame for plotting
-importance_df <- data.frame(Variable = names(importance), Importance = importance)
-
-# Order variables by importance
-importance_df <- importance_df[order(importance_df$Importance, decreasing = TRUE), ]
-
-# Exclude lower 50% of variables
-importance_df <- importance_df[1:(nrow(importance_df)/2), ]
-
-# Calculate 75th percentile of importance
-percentile_75 <- quantile(importance_df$Importance, 0.75)
-
-# Create bar plot of variable importance
-ggplot(importance_df, aes(x = reorder(Variable, Importance), y = Importance)) +
-  geom_bar(stat = "identity") +
-  geom_vline(xintercept = which(importance_df$Importance == percentile_75), color = "red") +
-  coord_flip() +
-  labs(x = "Variable", y = "Importance") +
-  theme_minimal() +
-  ggtitle("Variable Importance")
-```
-
-# CLMM
-```{r}
 train$Injury <- as.factor(train$Injury)
 test$Injury <- as.factor(test$Injury)
 train$ExerciseID <- as.factor(train$ExerciseID)
@@ -377,28 +282,8 @@ test$TrainingID <- as.factor(test$TrainingID)
 train$Date <- as.factor(train$Date)
 test$Date <- as.factor(test$Date)
 
-# Prepare data for clmm model
-variables <- c("TrainingID", "Recovered", "Muscle Soreness", "Hours of sleep", "RPE", "Duration.player", "Wellness", "ExerciseID", "Duration_s", "Prct", "Date", "Injury")
-train_clmm <- train[, variables]
-test_clmm <- test[, variables]
-
-# Fit clmm model
-clmm_model <- clmm(Injury ~ Recovered + `Muscle Soreness` + `Sleep quality` + `Hours of sleep` + RPE + Duration.player + Wellness + Duration_s + Prct + (1|Date) + (1|TrainingID) + (1|ExerciseID), data = train_clmm)
-
-# Print clmm model
-print(summary(clmm_model))
-
-# Predict on test data
-predictions <- predict(clmm_model, newdata = test_clmm, type = "class")
-
-# Evaluate model
-confusionMatrix(predictions, test_clmm$Injury)
-
-```
 
 
-
-```{r}
 # Prepare data for clmm model
 variables <- c("TrainingID", "Recovered", "Wellness", "Hours of sleep", "RPE", "Duration.player", "ExerciseID", "Duration_s", "Prct", "Date", "Injury")
 train_clmm <- train[, variables]
@@ -428,6 +313,4 @@ predictions <- predict(clmm_model, newdata = test_clmm, type = "class")
 
 # Evaluate model
 confusionMatrix(predictions, test_clmm$Injury)
-
-```
 
