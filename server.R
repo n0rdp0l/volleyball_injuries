@@ -2,23 +2,29 @@
 
 library(shiny)
 library(reticulate)
+library(shinyWidgets)
 
 # Define server logic required to summarize and view the selected file
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
   
   # R script execution
   observeEvent(input$run_analysis, {
     req(input$ExerciseTrainingData, input$Jumps, input$Wellness, input$PlayerTrainingData, input$StrengthTraining)
     
-    source('volleyball.R')
-    output$r_output <- renderText({"R Script executed successfully!"})
+    
+    coefficients <- source('volleyball.R')$value
+    output$coefficients <- renderPrint({coefficients})
   })
   
   # Python script execution
   observeEvent(input$run_analysis, {
     req(input$ExerciseTrainingData, input$Jumps, input$Wellness, input$PlayerTrainingData, input$StrengthTraining)
     
-    py_run_file('xgboost.py')
-    output$py_output <- renderText({"Python Script executed successfully!"})
+    
+    predicted_scores <- py_run_file('xgboost.py')$value
+    injury_score <- predicted_scores[1, "score"]
+    
+    status <- ifelse(injury_score <= 5, "success", "danger")
+    updateProgressBar(session, "injury_score", value = injury_score, status = status)
   })
 })

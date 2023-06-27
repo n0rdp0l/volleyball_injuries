@@ -84,8 +84,6 @@ df$Duration.exercise <- as.numeric(df$Duration.exercise, units="secs")
 df <- df[, -which(names(df) == "DateEndTime")]
 df <- df[, -which(names(df) == "DateStartTime")]
 
-summary(df)
-unique(sort(df$Date))
 
 
 
@@ -104,18 +102,6 @@ df <- full_join(all_dates, df, by = c("Date", "PlayerID"))
 
 df_no.lags <- df
 
-
-# Total number of missing values in the data frame
-total_na <- sum(is.na(df))
-
-# Number of missing values in each column
-col_na <- sort(colSums(is.na(df)))
-
-print(total_na)
-print(col_na)
-
-# Visualize missing values
-gg_miss_var(df)
 
 
 # Convert Date to Date type if it's not already
@@ -167,15 +153,6 @@ total_na <- sort(sum(is.na(df_final)))
 # Number of missing values in each column
 col_na <- sort(colSums(is.na(df_final)))
 
-print(total_na)
-print(col_na)
-
-# Visualize missing values
-gg_miss_var(df_final)
-
-## dim(df_final)
-## df_final <- na.omit(df_final)
-## dim(df_final)
 
 # Sort the data by date
 df_final$Date <- as.Date(df_final$Date, format = "%Y-%m-%d")
@@ -237,7 +214,7 @@ lambda_optimal <- cv.lasso$lambda.min
 lasso_model <- glmnet(x_train, y_train, alpha = 1, lambda = lambda_optimal)
 
 # Print lasso model
-lasso_model
+#lasso_model
 
 
 # Get coefficients from the lasso model

@@ -1,6 +1,7 @@
 # ui.R
 
 library(shiny)
+library(shinyWidgets)
 
 # Define UI for data upload app
 shinyUI(fluidPage(
@@ -23,8 +24,14 @@ shinyUI(fluidPage(
     
     # Main panel for displaying outputs
     mainPanel(
-      textOutput("r_output"),
-      textOutput("py_output")
+      div(id = "r_output",
+          h3("Model Coefficients"),
+          textOutput("coefficients")
+      ),
+      div(id = "py_output",
+          h3("Predicted Injury Score"),
+          progressBar(id = "injury_score", value = 0, total = 10, display_pct = TRUE, status = "success")
+      )
     )
   )
 ))
